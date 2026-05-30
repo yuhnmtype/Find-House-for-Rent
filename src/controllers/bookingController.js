@@ -80,9 +80,17 @@ const createBooking = async (req, res) => {
 // GET /api/bookings/my  — student's own bookings
 const getMyBookings = async (req, res) => {
   try {
+    const { page = 1, limit = 10, status } = req.query;
+    const skip  = (parseInt(page) - 1) * parseInt(limit);
+    const where = { studentId: req.user.id };
+    if (status) where.status = status;
+
+    const total    = await prisma.booking.count({ where });
     const bookings = await prisma.booking.findMany({
-      where: { studentId: req.user.id },
+      where,
       orderBy: { createdAt: 'desc' },
+      skip,
+      take: parseInt(limit),
       include: {
         house: {
           select: { id: true, title: true, address: true, district: true, price: true, images: true },
@@ -92,6 +100,9 @@ const getMyBookings = async (req, res) => {
 
     res.json({
       success: true,
+      total,
+      page:       parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
       bookings: bookings.map((b) => ({
         ...b,
         house: { ...b.house, images: JSON.parse(b.house.images) },
@@ -187,14 +198,30 @@ const updateBookingStatus = async (req, res) => {
 // GET /api/bookings  — staff sees all bookings
 const getAllBookings = async (req, res) => {
   try {
+    const { page = 1, limit = 10, status } = req.query;
+    const skip  = (parseInt(page) - 1) * parseInt(limit);
+    const where = {};
+    if (status) where.status = status;
+
+    const total    = await prisma.booking.count({ where });
     const bookings = await prisma.booking.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
+      skip,
+      take: parseInt(limit),
       include: {
-        house: { select: { id: true, title: true, district: true } },
+        house:   { select: { id: true, title: true, district: true } },
         student: { select: { id: true, fullName: true, email: true } },
       },
     });
-    res.json({ success: true, bookings });
+
+    res.json({
+      success: true,
+      total,
+      page:       parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      bookings,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

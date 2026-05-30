@@ -45,14 +45,29 @@ const createContract = async (req, res) => {
 // GET /api/contracts/my  — student views their contracts
 const getMyContracts = async (req, res) => {
   try {
+    const { page = 1, limit = 10, status } = req.query;
+    const skip  = (parseInt(page) - 1) * parseInt(limit);
+    const where = { studentId: req.user.id };
+    if (status) where.status = status;
+
+    const total     = await prisma.contract.count({ where });
     const contracts = await prisma.contract.findMany({
-      where: { studentId: req.user.id },
+      where,
       orderBy: { createdAt: 'desc' },
+      skip,
+      take: parseInt(limit),
       include: {
         house: { select: { id: true, title: true, address: true, district: true } },
       },
     });
-    res.json({ success: true, contracts });
+
+    res.json({
+      success: true,
+      total,
+      page:       parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      contracts,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -68,10 +83,12 @@ const getContractsByHouse = async (req, res) => {
     }
 
     const contracts = await prisma.contract.findMany({
-      where: { houseId: parseInt(req.params.houseId) },
+      where:   { houseId: parseInt(req.params.houseId) },
+      orderBy: { createdAt: 'desc' },
       include: { student: { select: { fullName: true, email: true, phone: true } } },
     });
-    res.json({ success: true, contracts });
+
+    res.json({ success: true, total: contracts.length, contracts });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -80,14 +97,30 @@ const getContractsByHouse = async (req, res) => {
 // GET /api/contracts  — staff sees all contracts
 const getAllContracts = async (req, res) => {
   try {
+    const { page = 1, limit = 10, status } = req.query;
+    const skip  = (parseInt(page) - 1) * parseInt(limit);
+    const where = {};
+    if (status) where.status = status;
+
+    const total     = await prisma.contract.count({ where });
     const contracts = await prisma.contract.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
+      skip,
+      take: parseInt(limit),
       include: {
-        house: { select: { id: true, title: true, district: true } },
+        house:   { select: { id: true, title: true, district: true } },
         student: { select: { id: true, fullName: true, email: true } },
       },
     });
-    res.json({ success: true, contracts });
+
+    res.json({
+      success: true,
+      total,
+      page:       parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      contracts,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
