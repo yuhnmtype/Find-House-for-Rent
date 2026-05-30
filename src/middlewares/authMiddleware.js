@@ -37,4 +37,28 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { authenticate, authorize };
+// Sets req.user if a valid token is present, skips silently if not.
+// Use on public routes that have optional authenticated behaviour
+// (e.g. GET /houses/:id records view history for students but still
+// serves the response to guests).
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(); // no token — continue as guest
+    }
+
+    const token   = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user    = await prisma.user.findUnique({ where: { id: decoded.id } });
+
+    if (user && user.isActive) {
+      req.user = user;
+    }
+  } catch {
+    // invalid or expired token — treat as guest, do not error
+  }
+  next();
+};
+
+module.exports = { authenticate, authorize, optionalAuth };

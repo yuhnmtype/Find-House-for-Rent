@@ -5,7 +5,7 @@ const {
   updateHouse, deleteHouse, getMyHouses, updateHouseStatus,
   getLandlordStats,
 } = require('../controllers/houseController');
-const { authenticate, authorize } = require('../middlewares/authMiddleware');
+const { authenticate, authorize, optionalAuth } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
 // public
@@ -15,8 +15,8 @@ router.get('/', getHouses);
 router.get('/landlord/my',    authenticate, authorize('LANDLORD'), getMyHouses);
 router.get('/landlord/stats', authenticate, authorize('LANDLORD'), getLandlordStats);
 
-// ── Parameterised routes ─────────────────────────────────────────────────────
-router.get('/:id',         getHouseById);
+// optionalAuth: guests can view, authenticated students get view history recorded
+router.get('/:id',         optionalAuth, getHouseById);
 router.post('/',           authenticate, authorize('LANDLORD'), upload.array('images', 10), createHouse);
 router.put('/:id',         authenticate, authorize('LANDLORD', 'STAFF'), upload.array('images', 10), updateHouse);
 router.delete('/:id',      authenticate, authorize('LANDLORD', 'STAFF'), deleteHouse);
