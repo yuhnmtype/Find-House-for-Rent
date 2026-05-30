@@ -140,8 +140,10 @@ const getLandlordStats = async (req, res) => {
 // GET /api/houses/:id
 const getHouseById = async (req, res) => {
   try {
+    const houseId = parseInt(req.params.id);
+
     const house = await prisma.house.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: { id: houseId },
       include: {
         landlord: {
           select: { id: true, fullName: true, email: true, phone: true, avatar: true },
@@ -150,6 +152,19 @@ const getHouseById = async (req, res) => {
     });
 
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
+
+    // record view history and increment viewCount for authenticated students
+    if (req.user && req.user.role === 'STUDENT') {
+      await Promise.all([
+        prisma.viewHistory.create({
+          data: { studentId: req.user.id, houseId },
+        }),
+        prisma.house.update({
+          where: { id: houseId },
+          data:  { viewCount: { increment: 1 } },
+        }),
+      ]);
+    }
 
     res.json({
       success: true,

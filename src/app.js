@@ -10,6 +10,7 @@ const contractRoutes = require('./routes/contracts');
 const paymentRoutes = require('./routes/payments');
 const userRoutes      = require('./routes/users');
 const favoriteRoutes  = require('./routes/favorites');
+const historyRoutes   = require('./routes/history');
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/payments',  paymentRoutes);
 app.use('/api/users',      userRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/history',   historyRoutes);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 // Catches any unmatched route and returns the same {success, message} shape
