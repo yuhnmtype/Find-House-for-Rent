@@ -14,8 +14,9 @@ const EDITABLE_FIELDS = [
 const getHouses = async (req, res) => {
   try {
     const {
-      district, type, interior,
+      district, ward, type, interior,
       minPrice, maxPrice, minArea, maxArea,
+      maxTenants, amenities,
       status = 'AVAILABLE',
       keyword,
       page = 1, limit = 10,
@@ -23,10 +24,12 @@ const getHouses = async (req, res) => {
     } = req.query;
 
     const where = {};
-    if (status)   where.status   = status;
-    if (district) where.district = { contains: district };
-    if (type)     where.type     = type;
-    if (interior) where.interior = interior;
+    if (status)     where.status   = status;
+    if (district)   where.district = { contains: district };
+    if (ward)       where.ward     = { contains: ward };
+    if (type)       where.type     = type;
+    if (interior)   where.interior = interior;
+    if (maxTenants) where.maxTenants = { gte: parseInt(maxTenants, 10) };
 
     if (minPrice || maxPrice) {
       where.price = {};
@@ -38,12 +41,25 @@ const getHouses = async (req, res) => {
       if (minArea) where.area.gte = parseFloat(minArea);
       if (maxArea) where.area.lte = parseFloat(maxArea);
     }
+
+    // amenities: comma-separated string, e.g. "wifi,ac,parking"
+    // filter houses whose amenities JSON contains ALL requested values
+    if (amenities) {
+      const requested = amenities.split(',').map((a) => a.trim()).filter(Boolean);
+      if (requested.length > 0) {
+        where.AND = requested.map((a) => ({
+          amenities: { contains: a },
+        }));
+      }
+    }
+
     if (keyword) {
       where.OR = [
         { title:       { contains: keyword } },
         { description: { contains: keyword } },
         { address:     { contains: keyword } },
         { district:    { contains: keyword } },
+        { ward:        { contains: keyword } },
       ];
     }
 
@@ -74,6 +90,47 @@ const getHouses = async (req, res) => {
       page: parseInt(page),
       totalPages: Math.ceil(total / parseInt(limit)),
       houses: formatted,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/houses/stats  — landlord sees stats for their own listings
+const getLandlordStats = async (req, res) => {
+  try {
+    const landlordId = req.user.id;
+
+    const [total, available, rented, pending, inactive] = await Promise.all([
+      prisma.house.count({ where: { landlordId } }),
+      prisma.house.count({ where: { landlordId, status: 'AVAILABLE' } }),
+      prisma.house.count({ where: { landlordId, status: 'RENTED' } }),
+      prisma.house.count({ where: { landlordId, status: 'PENDING' } }),
+      prisma.house.count({ where: { landlordId, status: 'INACTIVE' } }),
+    ]);
+
+    // total estimated monthly revenue from rented houses
+    const rentedHouses = await prisma.house.findMany({
+      where: { landlordId, status: 'RENTED' },
+      select: { price: true },
+    });
+    const monthlyRevenue = rentedHouses.reduce((sum, h) => sum + h.price, 0);
+
+    // pending bookings across all landlord houses
+    const pendingBookings = await prisma.booking.count({
+      where: {
+        house: { landlordId },
+        status: 'PENDING',
+      },
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        listings: { total, available, rented, pending, inactive },
+        pendingBookings,
+        estimatedMonthlyRevenue: monthlyRevenue,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -287,4 +344,5 @@ const updateHouseStatus = async (req, res) => {
 module.exports = {
   getHouses, getHouseById, createHouse,
   updateHouse, deleteHouse, getMyHouses, updateHouseStatus,
+  getLandlordStats,
 };

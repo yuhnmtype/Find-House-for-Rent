@@ -3,17 +3,17 @@ const router  = express.Router();
 const {
   getHouses, getHouseById, createHouse,
   updateHouse, deleteHouse, getMyHouses, updateHouseStatus,
+  getLandlordStats,
 } = require('../controllers/houseController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
-// ── Public ───────────────────────────────────────────────────────────────────
+// public
 router.get('/', getHouses);
 
-// ── Landlord-specific static paths MUST come before /:id ────────────────────
-// If '/landlord/my' were registered after '/:id', Express would match it first
-// with id = "landlord", parseInt would return NaN, and the DB query would crash.
-router.get('/landlord/my', authenticate, authorize('LANDLORD'), getMyHouses);
+// static paths — must come before /:id
+router.get('/landlord/my',    authenticate, authorize('LANDLORD'), getMyHouses);
+router.get('/landlord/stats', authenticate, authorize('LANDLORD'), getLandlordStats);
 
 // ── Parameterised routes ─────────────────────────────────────────────────────
 router.get('/:id',         getHouseById);
