@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  fullName    String
+  email       String    @unique
+  password    String
+  phone       String?
+  role        String    @default("STUDENT") // STUDENT | LANDLORD | STAFF
+  avatar      String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  houses      House[]
+  bookings    Booking[]
+  payments    Payment[]
+  contracts   Contract[]
+  favorites   Favorite[]
+  viewHistory ViewHistory[]
+}
+
+model House {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  address      String
+  district     String    // Ho Chi Minh City district
+  ward         String?
+  area         Float     // square meters
+  price        Float     // VND per month
+  deposit      Float?    // security deposit
+  maxTenants   Int       @default(1)
+  interior     String    // FURNISHED | SEMI_FURNISHED | UNFURNISHED
+  type         String    // HOUSE | ROOM | APARTMENT | DORMITORY
+  status       String    @default("AVAILABLE") // AVAILABLE | RENTED | PENDING | INACTIVE
+  images       String    @default("[]") // JSON array of image paths
+  amenities    String    @default("[]") // JSON array: wifi, ac, parking, etc.
+  contactEmail String?
+  contactPhone String?
+  landlordId   Int
+  viewCount    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  landlord     User        @relation(fields: [landlordId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  contracts    Contract[]
+  favorites    Favorite[]
+  viewHistory  ViewHistory[]
+}
+
+model Booking {
+  id          Int       @id @default(autoincrement())
+  houseId     Int
+  studentId   Int
+  message     String?
+  status      String    @default("PENDING") // PENDING | APPROVED | REJECTED | CANCELLED
+  visitDate   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  house       House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Contract {
+  id           Int       @id @default(autoincrement())
+  houseId      Int
+  studentId    Int
+  startDate    DateTime
+  endDate      DateTime
+  monthlyRent  Float
+  depositPaid  Float
+  terms        String?
+  status       String    @default("ACTIVE") // ACTIVE | EXPIRED | TERMINATED
+  signedAt     DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  house        House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  student      User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String    // LISTING_FEE | RENEWAL_FEE
+  amount      Float
+  month       Int       // billing month
+  year        Int       // billing year
+  status      String    @default("PENDING") // PENDING | PAID | OVERDUE
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  houseId   Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, houseId]) // one favorite per student per house
+}
+
+model ViewHistory {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  houseId   Int
+  viewedAt  DateTime @default(now())
+
+  // Relations
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+}
