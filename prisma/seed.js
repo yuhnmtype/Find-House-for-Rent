@@ -2,6 +2,30 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../src/utils/prisma');
 require('dotenv').config();
 
+// Unsplash direct-link images grouped by house type.
+// Free to use, no account required.
+const IMAGES = {
+  ROOM: [
+    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800',
+    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800',
+    'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+  ],
+  APARTMENT: [
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+    'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800',
+  ],
+  HOUSE: [
+    'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800',
+    'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800',
+    'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=800',
+  ],
+  DORMITORY: [
+    'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800',
+    'https://images.unsplash.com/photo-1626178793926-22b28830aa30?w=800',
+  ],
+};
+
 async function main() {
   console.log('[seed] starting...');
 
@@ -139,7 +163,7 @@ async function main() {
       area:         20, price: 2500000, deposit: 5000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking', 'washing_machine']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
     {
@@ -151,7 +175,7 @@ async function main() {
       area:         35, price: 4500000, deposit: 9000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'APARTMENT', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'elevator', 'security', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
     {
@@ -163,7 +187,7 @@ async function main() {
       area:         75, price: 7000000, deposit: 14000000, maxTenants: 4,
       interior:     'SEMI_FURNISHED', type: 'HOUSE', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'parking', 'yard', 'washing_machine']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.HOUSE),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
 
@@ -177,7 +201,7 @@ async function main() {
       area:         30, price: 4200000, deposit: 8000000, maxTenants: 2,
       interior:     'SEMI_FURNISHED', type: 'APARTMENT', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'balcony', 'security']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
     {
@@ -189,7 +213,7 @@ async function main() {
       area:         25, price: 3000000, deposit: 6000000, maxTenants: 2,
       interior:     'SEMI_FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
 
@@ -203,7 +227,7 @@ async function main() {
       area:         45, price: 9000000, deposit: 18000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'APARTMENT', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'gym', 'pool', 'security', 'elevator', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
     {
@@ -215,7 +239,7 @@ async function main() {
       area:         22, price: 3500000, deposit: 7000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
 
@@ -229,7 +253,7 @@ async function main() {
       area:         40, price: 12000000, deposit: 24000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'APARTMENT', status: 'RENTED',
       amenities:    JSON.stringify(['wifi', 'ac', 'security', 'elevator', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
     {
@@ -241,7 +265,7 @@ async function main() {
       area:         28, price: 6500000, deposit: 13000000, maxTenants: 1,
       interior:     'FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'security']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
 
@@ -255,7 +279,7 @@ async function main() {
       area:         80, price: 8500000, deposit: 17000000, maxTenants: 4,
       interior:     'SEMI_FURNISHED', type: 'HOUSE', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking', 'security', 'yard']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.HOUSE),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
     {
@@ -267,7 +291,7 @@ async function main() {
       area:         18, price: 2000000, deposit: 4000000, maxTenants: 1,
       interior:     'UNFURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
 
@@ -281,7 +305,7 @@ async function main() {
       area:         38, price: 5500000, deposit: 11000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'APARTMENT', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'security', 'parking', 'elevator']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
     {
@@ -293,7 +317,7 @@ async function main() {
       area:         20, price: 2800000, deposit: 5600000, maxTenants: 2,
       interior:     'SEMI_FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
 
@@ -307,7 +331,7 @@ async function main() {
       area:         18, price: 1800000, deposit: 3600000, maxTenants: 1,
       interior:     'UNFURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
 
@@ -321,7 +345,7 @@ async function main() {
       area:         50, price: 1500000, deposit: 1500000, maxTenants: 6,
       interior:     'FURNISHED', type: 'DORMITORY', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'parking', 'canteen', 'security', 'study_room']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.DORMITORY),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
 
@@ -335,7 +359,7 @@ async function main() {
       area:         22, price: 3200000, deposit: 6400000, maxTenants: 2,
       interior:     'SEMI_FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
     {
@@ -347,7 +371,7 @@ async function main() {
       area:         50, price: 7500000, deposit: 15000000, maxTenants: 3,
       interior:     'FURNISHED', type: 'APARTMENT', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking', 'security', 'elevator']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
 
@@ -361,7 +385,7 @@ async function main() {
       area:         26, price: 4800000, deposit: 9600000, maxTenants: 2,
       interior:     'FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'security', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
 
@@ -375,7 +399,7 @@ async function main() {
       area:         42, price: 10500000, deposit: 21000000, maxTenants: 2,
       interior:     'FURNISHED', type: 'APARTMENT', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'elevator', 'security', 'gym', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.APARTMENT),
       landlordId:   landlord3.id, contactEmail: landlord3.email, contactPhone: '0907555666',
     },
     {
@@ -387,7 +411,7 @@ async function main() {
       area:         24, price: 3800000, deposit: 7600000, maxTenants: 2,
       interior:     'SEMI_FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'ac', 'parking', 'kitchen']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord2.id, contactEmail: landlord2.email, contactPhone: '0908333444',
     },
 
@@ -401,7 +425,7 @@ async function main() {
       area:         20, price: 2900000, deposit: 5800000, maxTenants: 2,
       interior:     'SEMI_FURNISHED', type: 'ROOM', status: 'AVAILABLE',
       amenities:    JSON.stringify(['wifi', 'parking']),
-      images:       JSON.stringify([]),
+      images:       JSON.stringify(IMAGES.ROOM),
       landlordId:   landlord1.id, contactEmail: landlord1.email, contactPhone: '0909111222',
     },
   ];
