@@ -16,25 +16,58 @@ const createContract = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not your house' });
     }
 
+    // fix #1a: reject if house already has an active contract
+    const activeContract = await prisma.contract.findFirst({
+      where: { houseId: parseInt(houseId), status: 'ACTIVE' },
+    });
+    if (activeContract) {
+      return res.status(409).json({ success: false, message: 'House already has an active contract' });
+    }
+
+    // fix #1b: require an approved booking from this student for this house
+    const approvedBooking = await prisma.booking.findFirst({
+      where: {
+        houseId:   parseInt(houseId),
+        studentId: parseInt(studentId),
+        status:    'APPROVED',
+      },
+    });
+    if (!approvedBooking) {
+      return res.status(400).json({ success: false, message: 'No approved booking found for this student and house' });
+    }
+
     const contract = await prisma.contract.create({
       data: {
-        houseId: parseInt(houseId),
-        studentId: parseInt(studentId),
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        houseId:     parseInt(houseId),
+        studentId:   parseInt(studentId),
+        startDate:   new Date(startDate),
+        endDate:     new Date(endDate),
         monthlyRent: parseFloat(monthlyRent),
         depositPaid: depositPaid ? parseFloat(depositPaid) : 0,
         terms,
         status: 'ACTIVE',
       },
       include: {
-        house: { select: { title: true, address: true, district: true } },
+        house:   { select: { title: true, address: true, district: true } },
         student: { select: { fullName: true, email: true } },
       },
     });
 
-    // Mark house as RENTED
-    await prisma.house.update({ where: { id: parseInt(houseId) }, data: { status: 'RENTED' } });
+    // mark house as RENTED
+    await prisma.house.update({
+      where: { id: parseInt(houseId) },
+      data:  { status: 'RENTED' },
+    });
+
+    // auto-reject all other pending bookings for this house
+    await prisma.booking.updateMany({
+      where: {
+        houseId: parseInt(houseId),
+        status:  'PENDING',
+        id:      { not: approvedBooking.id },
+      },
+      data: { status: 'REJECTED' },
+    });
 
     res.status(201).json({ success: true, message: 'Contract created', contract });
   } catch (err) {
@@ -126,23 +159,28 @@ const getAllContracts = async (req, res) => {
   }
 };
 
-// PATCH /api/contracts/:id/terminate  — end contract early, set house back to AVAILABLE
+// PATCH /api/contracts/:id/terminate
 const terminateContract = async (req, res) => {
   try {
     const contract = await prisma.contract.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where:   { id: parseInt(req.params.id) },
       include: { house: true },
     });
     if (!contract) return res.status(404).json({ success: false, message: 'Contract not found' });
 
+    // fix #2 minor: only allow terminating an ACTIVE contract
+    if (contract.status !== 'ACTIVE') {
+      return res.status(400).json({ success: false, message: `Contract is already ${contract.status.toLowerCase()}` });
+    }
+
     await prisma.contract.update({
       where: { id: parseInt(req.params.id) },
-      data: { status: 'TERMINATED' },
+      data:  { status: 'TERMINATED' },
     });
 
     await prisma.house.update({
       where: { id: contract.houseId },
-      data: { status: 'AVAILABLE' },
+      data:  { status: 'AVAILABLE' },
     });
 
     res.json({ success: true, message: 'Contract terminated, house is now available again' });

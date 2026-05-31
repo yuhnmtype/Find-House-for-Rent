@@ -135,6 +135,14 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'currentPassword and newPassword are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {

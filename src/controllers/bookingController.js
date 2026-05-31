@@ -21,11 +21,14 @@ const createBooking = async (req, res) => {
     });
 
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
-    if (house.status !== 'AVAILABLE') {
-      return res.status(400).json({ success: false, message: 'House is not available' });
+
+    // block booking only if house is RENTED or INACTIVE — not PENDING
+    // this allows multiple students to apply for the same house
+    if (house.status === 'RENTED' || house.status === 'INACTIVE') {
+      return res.status(400).json({ success: false, message: 'House is not available for booking' });
     }
 
-    // Prevent duplicate pending booking
+    // prevent this student from having two pending bookings on the same house
     const existing = await prisma.booking.findFirst({
       where: { houseId: parseInt(houseId), studentId: req.user.id, status: 'PENDING' },
     });
@@ -35,20 +38,17 @@ const createBooking = async (req, res) => {
 
     const booking = await prisma.booking.create({
       data: {
-        houseId: parseInt(houseId),
+        houseId:   parseInt(houseId),
         studentId: req.user.id,
         message,
         visitDate: visitDate ? new Date(visitDate) : null,
-        status: 'PENDING',
+        status:    'PENDING',
       },
       include: {
-        house: { select: { title: true, address: true, district: true } },
+        house:   { select: { title: true, address: true, district: true } },
         student: { select: { fullName: true, email: true, phone: true } },
       },
     });
-
-    // Mark house as PENDING
-    await prisma.house.update({ where: { id: parseInt(houseId) }, data: { status: 'PENDING' } });
 
     // Email landlord
     try {
@@ -56,12 +56,12 @@ const createBooking = async (req, res) => {
       await transporter.sendMail({
         from: `"Find House HCMC" <${process.env.EMAIL_USER}>`,
         to: house.landlord.email,
-        subject: `New Booking Request – ${house.title}`,
+        subject: `New Booking Request - ${house.title}`,
         html: `
           <h2>New Booking Request</h2>
           <p><strong>Student:</strong> ${req.user.fullName} (${req.user.email})</p>
           <p><strong>Phone:</strong> ${req.user.phone || 'N/A'}</p>
-          <p><strong>House:</strong> ${house.title} – ${house.address}, ${house.district}</p>
+          <p><strong>House:</strong> ${house.title} - ${house.address}, ${house.district}</p>
           <p><strong>Message:</strong> ${message || 'No message'}</p>
           ${visitDate ? `<p><strong>Requested Visit Date:</strong> ${new Date(visitDate).toLocaleDateString('vi-VN')}</p>` : ''}
           <p>Please log in to approve or reject this booking.</p>
@@ -166,9 +166,18 @@ const updateBookingStatus = async (req, res) => {
       data: { status },
     });
 
-    // If rejected/cancelled restore house to AVAILABLE
+    // if rejected/cancelled, only restore house to AVAILABLE if no other pending bookings remain
     if (status === 'REJECTED' || status === 'CANCELLED') {
-      await prisma.house.update({ where: { id: booking.houseId }, data: { status: 'AVAILABLE' } });
+      const otherPending = await prisma.booking.count({
+        where: {
+          houseId: booking.houseId,
+          status:  'PENDING',
+          id:      { not: parseInt(req.params.id) },
+        },
+      });
+      if (otherPending === 0 && booking.house.status !== 'RENTED') {
+        await prisma.house.update({ where: { id: booking.houseId }, data: { status: 'AVAILABLE' } });
+      }
     }
 
     // Notify student by email

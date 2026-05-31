@@ -52,7 +52,7 @@ model House {
   updatedAt    DateTime  @updatedAt
 
   // Relations
-  landlord     User        @relation(fields: [landlordId], references: [id])
+  landlord     User        @relation(fields: [landlordId], references: [id], onDelete: Cascade)
   bookings     Booking[]
   contracts    Contract[]
   favorites    Favorite[]
@@ -70,8 +70,8 @@ model Booking {
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  house       House     @relation(fields: [houseId], references: [id])
-  student     User      @relation(fields: [studentId], references: [id])
+  house       House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Contract {
@@ -89,8 +89,8 @@ model Contract {
   updatedAt    DateTime  @updatedAt
 
   // Relations
-  house        House     @relation(fields: [houseId], references: [id])
-  student      User      @relation(fields: [studentId], references: [id])
+  house        House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  student      User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
@@ -106,7 +106,7 @@ model Payment {
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Favorite {
@@ -116,8 +116,8 @@ model Favorite {
   createdAt DateTime @default(now())
 
   // Relations
-  student   User     @relation(fields: [studentId], references: [id])
-  house     House    @relation(fields: [houseId], references: [id])
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, houseId]) // one favorite per student per house
 }
@@ -129,6 +129,6 @@ model ViewHistory {
   viewedAt  DateTime @default(now())
 
   // Relations
-  student   User     @relation(fields: [studentId], references: [id])
-  house     House    @relation(fields: [houseId], references: [id])
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
 }
