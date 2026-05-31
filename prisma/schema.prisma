@@ -42,8 +42,8 @@ model House {
   interior     String    // FURNISHED | SEMI_FURNISHED | UNFURNISHED
   type         String    // HOUSE | ROOM | APARTMENT | DORMITORY
   status       String    @default("AVAILABLE") // AVAILABLE | RENTED | PENDING | INACTIVE
-  images       String    @default("[]") // JSON array of image paths
-  amenities    String    @default("[]") // JSON array: wifi, ac, parking, etc.
+  images       String    @db.Text
+  amenities    String    @db.Text
   contactEmail String?
   contactPhone String?
   landlordId   Int
