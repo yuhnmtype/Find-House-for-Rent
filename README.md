@@ -202,3 +202,5 @@ Query parameters for `GET /houses`: `district`, `ward`, `type`, `interior`, `sta
 ## Version Control
 
 The project uses Git with separate branches for each part of the codebase. The `backend` branch contains the API and database code. The `frontend` branch contains the pages and client-side logic. Both are merged into `main` for the final submission.
+
+Live URL: https://find-house-project.netlify.app
